@@ -60,6 +60,154 @@ The extension logs which MR JAR versions it detects:
 [multi-release-jar] my-module: Detected multi-release JAR versions: [17, 21] (JDK 25)
 ```
 
+## What It Replaces
+
+Without the extension, each JDK version requires three manually maintained profiles in your parent POM. For example, supporting just JDK 21 requires the following ~100 lines of XML:
+
+```xml
+<!-- Profile 1: Test classpath when running on JDK 21 -->
+<profile>
+    <id>java21-test-classpath</id>
+    <activation>
+        <jdk>[21,22)</jdk>
+    </activation>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-test</id>
+                        <configuration>
+                            <classesDirectory>${project.build.outputDirectory}/META-INF/versions/21</classesDirectory>
+                            <additionalClasspathElements>
+                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/20</additionalClasspathElement>
+                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/19</additionalClasspathElement>
+                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/18</additionalClasspathElement>
+                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/17</additionalClasspathElement>
+                                <additionalClasspathElement>${project.build.outputDirectory}</additionalClasspathElement>
+                            </additionalClasspathElements>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</profile>
+
+<!-- Profile 2: Cross-JDK testing (run tests on JDK 20 when building with JDK 21+) -->
+<profile>
+    <id>java20-test</id>
+    <activation>
+        <jdk>[21,)</jdk>
+        <property>
+            <name>java20.home</name>
+        </property>
+        <file>
+            <exists>${basedir}/build-test-java20</exists>
+        </file>
+    </activation>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>java20-test</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <jvm>${java20.home}/bin/java</jvm>
+                            <classesDirectory>${project.build.outputDirectory}/META-INF/versions/20</classesDirectory>
+                            <additionalClasspathElements>
+                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/19</additionalClasspathElement>
+                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/18</additionalClasspathElement>
+                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/17</additionalClasspathElement>
+                                <additionalClasspathElement>${project.build.outputDirectory}</additionalClasspathElement>
+                            </additionalClasspathElements>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</profile>
+
+<!-- Profile 3: Multi-release compilation -->
+<profile>
+    <id>java21-mr-build</id>
+    <activation>
+        <jdk>[21,)</jdk>
+        <file>
+            <exists>${basedir}/src/main/java21</exists>
+        </file>
+    </activation>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>compile-java21</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <release>21</release>
+                            <compileSourceRoots>
+                                <compileSourceRoot>${project.basedir}/src/main/java21</compileSourceRoot>
+                            </compileSourceRoots>
+                            <multiReleaseOutput>true</multiReleaseOutput>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>net.revelc.code</groupId>
+                <artifactId>impsort-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>sort-imports-java21</id>
+                        <goals>
+                            <goal>sort</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirectory>${project.basedir}/src/main/java21</sourceDirectory>
+                            <compliance>21</compliance>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>net.revelc.code.formatter</groupId>
+                <artifactId>formatter-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>format-sources-java21</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>format</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirectory>${project.basedir}/src/main/java21</sourceDirectory>
+                            <compilerCompliance>21</compilerCompliance>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</profile>
+```
+
+Multiply this by every JDK version you need to support (17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27...) and the parent POM grows by ~100 lines per version. The extension replaces all of it with zero configuration.
+
 ## How It Works
 
 ### Multi-release compilation
