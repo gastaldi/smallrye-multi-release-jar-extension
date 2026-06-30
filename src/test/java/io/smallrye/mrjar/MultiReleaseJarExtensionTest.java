@@ -2,16 +2,11 @@ package io.smallrye.mrjar;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Properties;
 import java.util.TreeSet;
 
-import org.apache.maven.execution.DefaultMavenExecutionRequest;
-import org.apache.maven.execution.MavenExecutionRequest;
-import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
@@ -260,11 +255,7 @@ class MultiReleaseJarExtensionTest {
         Properties userProps = new Properties();
         userProps.setProperty("java17.home", "/opt/jdk-17");
 
-        MavenExecutionRequest request = new DefaultMavenExecutionRequest();
-        request.setUserProperties(userProps);
-        MavenSession session = new MavenSession(null, request, null, List.of(project));
-
-        MultiReleaseJarExtension.configureCrossJdkTests(project, session, 21, 17);
+        MultiReleaseJarExtension.configureCrossJdkTests(project, userProps, 21, 17);
 
         Build build = project.getModel().getBuild();
         Plugin surefire = findPlugin(build, "org.apache.maven.plugins", "maven-surefire-plugin");
@@ -289,11 +280,7 @@ class MultiReleaseJarExtensionTest {
         Properties userProps = new Properties();
         userProps.setProperty("java17.home", "/opt/jdk-17");
 
-        MavenExecutionRequest request = new DefaultMavenExecutionRequest();
-        request.setUserProperties(userProps);
-        MavenSession session = new MavenSession(null, request, null, List.of(project));
-
-        MultiReleaseJarExtension.configureCrossJdkTests(project, session, 21, 17);
+        MultiReleaseJarExtension.configureCrossJdkTests(project, userProps, 21, 17);
 
         Build build = project.getModel().getBuild();
         assertThat(build.getPlugins()).isEmpty();
@@ -303,10 +290,7 @@ class MultiReleaseJarExtensionTest {
     void configureCrossJdkTests_skipsWhenPropertyMissing() throws Exception {
         Files.createFile(tempDir.resolve("build-test-java17"));
 
-        MavenExecutionRequest request = new DefaultMavenExecutionRequest();
-        MavenSession session = new MavenSession(null, request, null, List.of(project));
-
-        MultiReleaseJarExtension.configureCrossJdkTests(project, session, 21, 17);
+        MultiReleaseJarExtension.configureCrossJdkTests(project, new Properties(), 21, 17);
 
         Build build = project.getModel().getBuild();
         assertThat(build.getPlugins()).isEmpty();
@@ -321,11 +305,7 @@ class MultiReleaseJarExtensionTest {
         userProps.setProperty("java17.home", "/opt/jdk-17");
         userProps.setProperty("java19.home", "/opt/jdk-19");
 
-        MavenExecutionRequest request = new DefaultMavenExecutionRequest();
-        request.setUserProperties(userProps);
-        MavenSession session = new MavenSession(null, request, null, List.of(project));
-
-        MultiReleaseJarExtension.configureCrossJdkTests(project, session, 21, 17);
+        MultiReleaseJarExtension.configureCrossJdkTests(project, userProps, 21, 17);
 
         Build build = project.getModel().getBuild();
         Plugin surefire = findPlugin(build, "org.apache.maven.plugins", "maven-surefire-plugin");

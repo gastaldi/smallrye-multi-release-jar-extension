@@ -1,8 +1,6 @@
 package io.smallrye.mrjar;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 import java.util.TreeSet;
 
@@ -55,7 +53,7 @@ public class MultiReleaseJarExtension extends AbstractMavenLifecycleParticipant 
 
             configureMrBuilds(project, mrVersions);
             configureTestClasspath(project, currentJdk, baseline);
-            configureCrossJdkTests(project, session, currentJdk, baseline);
+            configureCrossJdkTests(project, session.getUserProperties(), currentJdk, baseline);
         }
     }
 
@@ -114,11 +112,10 @@ public class MultiReleaseJarExtension extends AbstractMavenLifecycleParticipant 
         config.addChild(classpathElements);
     }
 
-    static void configureCrossJdkTests(MavenProject project, MavenSession session,
+    static void configureCrossJdkTests(MavenProject project, Properties userProperties,
             int currentJdk, int baseline) {
         Build build = getOrCreateBuild(project);
         String outputDir = project.getBuild().getOutputDirectory();
-        Properties userProps = session.getUserProperties();
         Properties projectProps = project.getProperties();
         File basedir = project.getBasedir();
         if (basedir == null) {
@@ -127,7 +124,7 @@ public class MultiReleaseJarExtension extends AbstractMavenLifecycleParticipant 
 
         for (int v = baseline; v < currentJdk; v++) {
             String homeProperty = "java" + v + ".home";
-            String homeValue = userProps.getProperty(homeProperty,
+            String homeValue = userProperties.getProperty(homeProperty,
                     projectProps.getProperty(homeProperty));
             File markerFile = new File(basedir, "build-test-java" + v);
 
