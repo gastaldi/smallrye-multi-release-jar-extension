@@ -62,7 +62,7 @@ The extension logs which MR JAR versions it detects:
 
 ## What It Replaces
 
-Without the extension, each JDK version requires manually maintained profiles in your parent POM. For example, adding multi-release support for JDK 21 sources requires the following profiles:
+Without the extension, each JDK version requires manually maintained profiles in your parent POM. For example, adding multi-release support for JDK 21 sources requires two separate profiles because they have different activation ranges — the MR build activates on JDK 21+ (you need to compile `src/main/java21` on any JDK >= 21), while the test classpath activates on JDK 21 only (on JDK 22, the classpath should point to version 22 instead):
 
 ```xml
 <!-- Compile src/main/java21 into META-INF/versions/21 -->
