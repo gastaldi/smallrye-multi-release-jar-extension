@@ -62,82 +62,10 @@ The extension logs which MR JAR versions it detects:
 
 ## What It Replaces
 
-Without the extension, each JDK version requires three manually maintained profiles in your parent POM. For example, supporting just JDK 21 requires the following ~100 lines of XML:
+Without the extension, each JDK version requires manually maintained profiles in your parent POM. For example, adding multi-release support for JDK 21 sources requires the following profiles:
 
 ```xml
-<!-- Profile 1: Test classpath when running on JDK 21 -->
-<profile>
-    <id>java21-test-classpath</id>
-    <activation>
-        <jdk>[21,22)</jdk>
-    </activation>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>default-test</id>
-                        <configuration>
-                            <classesDirectory>${project.build.outputDirectory}/META-INF/versions/21</classesDirectory>
-                            <additionalClasspathElements>
-                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/20</additionalClasspathElement>
-                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/19</additionalClasspathElement>
-                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/18</additionalClasspathElement>
-                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/17</additionalClasspathElement>
-                                <additionalClasspathElement>${project.build.outputDirectory}</additionalClasspathElement>
-                            </additionalClasspathElements>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-</profile>
-
-<!-- Profile 2: Cross-JDK testing (run tests on JDK 20 when building with JDK 21+) -->
-<profile>
-    <id>java20-test</id>
-    <activation>
-        <jdk>[21,)</jdk>
-        <property>
-            <name>java20.home</name>
-        </property>
-        <file>
-            <exists>${basedir}/build-test-java20</exists>
-        </file>
-    </activation>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>java20-test</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>test</goal>
-                        </goals>
-                        <configuration>
-                            <jvm>${java20.home}/bin/java</jvm>
-                            <classesDirectory>${project.build.outputDirectory}/META-INF/versions/20</classesDirectory>
-                            <additionalClasspathElements>
-                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/19</additionalClasspathElement>
-                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/18</additionalClasspathElement>
-                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/17</additionalClasspathElement>
-                                <additionalClasspathElement>${project.build.outputDirectory}</additionalClasspathElement>
-                            </additionalClasspathElements>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-</profile>
-
-<!-- Profile 3: Multi-release compilation -->
+<!-- Compile src/main/java21 into META-INF/versions/21 -->
 <profile>
     <id>java21-mr-build</id>
     <activation>
@@ -204,9 +132,40 @@ Without the extension, each JDK version requires three manually maintained profi
         </plugins>
     </build>
 </profile>
+
+<!-- Configure Surefire test classpath when running on JDK 21 -->
+<profile>
+    <id>java21-test-classpath</id>
+    <activation>
+        <jdk>[21,22)</jdk>
+    </activation>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-test</id>
+                        <configuration>
+                            <classesDirectory>${project.build.outputDirectory}/META-INF/versions/21</classesDirectory>
+                            <additionalClasspathElements>
+                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/20</additionalClasspathElement>
+                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/19</additionalClasspathElement>
+                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/18</additionalClasspathElement>
+                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/17</additionalClasspathElement>
+                                <additionalClasspathElement>${project.build.outputDirectory}</additionalClasspathElement>
+                            </additionalClasspathElements>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</profile>
 ```
 
-Multiply this by every JDK version you need to support (17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27...) and the parent POM grows by ~100 lines per version. The extension replaces all of it with zero configuration.
+On top of this, each JDK version also needs a cross-JDK testing profile (to run tests against the previous JDK when a `javaN.home` property is set). Multiply all of this by every JDK version you need to support (17 through 27 and counting) and the parent POM grows by thousands of lines. The extension replaces all of it with zero configuration.
 
 ## How It Works
 
