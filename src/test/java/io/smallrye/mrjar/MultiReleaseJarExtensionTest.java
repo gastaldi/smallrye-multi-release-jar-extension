@@ -83,6 +83,22 @@ class MultiReleaseJarExtensionTest {
     }
 
     @Test
+    void configureMrBuilds_registersCompileSourceRoots() throws Exception {
+        Files.createDirectories(tempDir.resolve("src/main/java17"));
+        Files.createDirectories(tempDir.resolve("src/main/java21"));
+
+        TreeSet<Integer> versions = new TreeSet<>();
+        versions.add(17);
+        versions.add(21);
+
+        MultiReleaseJarExtension.configureMrBuilds(project, versions);
+
+        assertThat(project.getCompileSourceRoots())
+                .anyMatch(r -> r.endsWith("/src/main/java17"))
+                .anyMatch(r -> r.endsWith("/src/main/java21"));
+    }
+
+    @Test
     void configureMrBuilds_addsCompilerExecution() throws Exception {
         Files.createDirectories(tempDir.resolve("src/main/java21"));
 

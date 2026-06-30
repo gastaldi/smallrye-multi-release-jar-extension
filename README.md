@@ -19,7 +19,7 @@ These profiles are nearly identical across versions, differing only in version n
 This extension replaces all of those profiles with zero-configuration automatic detection:
 
 - Scans each reactor module for `src/main/javaN` directories
-- Detects the running JDK version
+_- Detects the running JDK version_
 - Dynamically injects the equivalent plugin configurations before the build starts
 
 New JDK versions are supported automatically — no POM changes required.

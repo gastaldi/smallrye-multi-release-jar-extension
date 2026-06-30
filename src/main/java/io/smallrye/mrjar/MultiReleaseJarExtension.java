@@ -78,6 +78,9 @@ public class MultiReleaseJarExtension extends AbstractMavenLifecycleParticipant 
         Build build = getOrCreateBuild(project);
 
         for (int version : mrVersions) {
+            String sourceRoot = new File(project.getBasedir(), "src/main/java" + version).getAbsolutePath();
+            project.addCompileSourceRoot(sourceRoot);
+
             addCompilerExecution(build, project, version);
 
             if (hasPlugin(project, IMPSORT_GROUP_ID, IMPSORT_ARTIFACT_ID)) {
