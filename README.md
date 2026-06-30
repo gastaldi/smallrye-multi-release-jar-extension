@@ -2,7 +2,7 @@
 
 A Maven core extension that automatically configures multi-release JAR (MR JAR) builds, eliminating the need to manually maintain hundreds of lines of profile boilerplate in parent POMs.
 
-Instead of adding ~150 lines of XML profiles for every new JDK version, this extension detects `src/main/javaN` source directories at build time and dynamically injects the required compiler, test, and formatting configurations.
+Instead of adding ~150+ lines of XML profiles for every new JDK version, this extension detects the running JDK version, scans for `src/main/javaN` source directories and `build-test-javaN` marker files, and dynamically injects the required compiler, test classpath, cross-JDK testing, and formatting configurations.
 
 ## Problem
 
